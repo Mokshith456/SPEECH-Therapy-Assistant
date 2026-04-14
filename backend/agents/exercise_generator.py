@@ -2,7 +2,7 @@
 import os
 import json
 from dotenv import load_dotenv
-from openai import OpenAI
+from groq import Groq
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"))
 
@@ -22,10 +22,8 @@ DISORDER_COLLECTION_MAP = {
 
 class DisorderAgent:
     def __init__(self, collection_name):
-        # Initialize OpenAI client pointing to Gemini API
-        self.client = OpenAI(
-            api_key=os.environ.get("GEMINI_API_KEY", ""),
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        self.client = Groq(
+            api_key=os.environ.get("GROQ_API_KEY", ""),
         )
         self.collection_name = collection_name
         # Get pre-extracted context for this disorder
@@ -287,7 +285,7 @@ class DisorderAgent:
             raise ValueError(f"Unknown disorder type: {disorder_type}")
 
         response = self.client.chat.completions.create(
-            model="gemini-2.0-flash",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "You are a speech therapy expert assistant."},
                 {"role": "user", "content": prompt}
