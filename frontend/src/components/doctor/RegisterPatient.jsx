@@ -21,7 +21,7 @@ export default function RegisterPatient() {
                 ...form,
                 goals: form.goals.split(",").map(g => g.trim())
             };
-            const res = await axios.post("http://localhost:5000/register-patient", payload);
+            const res = await axios.post("/register-patient", payload);
             alert(res.data.message);
             setForm({
                 username: "",

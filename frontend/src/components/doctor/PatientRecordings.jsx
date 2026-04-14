@@ -13,7 +13,7 @@ export default function PatientRecordings() {
 
     const fetchRecordings = async () => {
         try {
-            const response = await axios.get("http://localhost:5000/list-recordings");
+            const response = await axios.get("/list-recordings");
             if (response.data.recordings && response.data.recordings.length > 0) {
                 setRecordings(response.data.recordings);
             } else {
@@ -146,7 +146,7 @@ export default function PatientRecordings() {
                                     marginTop: "0.5rem"
                                 }}
                             >
-                                <source src={`http://localhost:5000/recordings/${recording}`} type="audio/wav" />
+                                <source src={`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/recordings/${recording}`} type="audio/wav" />
                                 Your browser does not support the audio element.
                             </audio>
                         </div>
