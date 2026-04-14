@@ -8,21 +8,22 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import chromadb
 from sentence_transformers import SentenceTransformer
 
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"))
 
 class DisorderAgent:
     def __init__(self, collection_name):
-        # Initialize OpenAI client instead of Groq
+        # Initialize OpenAI client pointing to Gemini API
         self.client = OpenAI(
-            api_key="AIzaSyCs6BZTPH7x8sY9HmejW-RO_kSW1Luul70",
+            api_key=os.environ.get("GEMINI_API_KEY", ""),
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
         )
         
         self.collection_name = collection_name
         
         # Initialize ChromaDB vector store
+        chroma_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "chroma_db")
         self.vector_store = ChromaVectorStore(
-            chroma_collection=chromadb.PersistentClient(path="chroma_db").get_collection(collection_name)
+            chroma_collection=chromadb.PersistentClient(path=chroma_path).get_collection(collection_name)
         )
         
         # Embedding model configuration

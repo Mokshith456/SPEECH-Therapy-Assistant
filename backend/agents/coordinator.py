@@ -1,12 +1,15 @@
 # File: agents/coordinator.py
+import os
 from agents.exercise_generator import DisorderAgent
 import chromadb
 from chromadb.config import Settings
 
+CHROMA_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "chroma_db")
+
 class MultiDisorderCoordinator:
     def __init__(self):
         self.chroma_client = chromadb.PersistentClient(
-            path="chroma_db",
+            path=CHROMA_DB_PATH,
             settings=Settings(allow_reset=False)
         )
         self.agents = {

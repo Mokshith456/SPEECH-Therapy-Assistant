@@ -14,7 +14,8 @@ from agents.coordinator import MultiDisorderCoordinator
 
 # ─────────────────────────────────────────
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+allowed_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+CORS(app, supports_credentials=True, origins=allowed_origins)
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 os.makedirs(os.path.join(BASE_DIR, "instance"), exist_ok=True)
@@ -202,7 +203,7 @@ def generate_plan():
 # Create feedback table
 def create_feedback_table():
     try:
-        conn = sqlite3.connect('feedback.db')
+        conn = sqlite3.connect(os.path.join(BASE_DIR, 'feedback.db'))
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS feedbacks (
@@ -234,7 +235,7 @@ def create_new_feedback():
         return jsonify({'error': 'Missing required fields'}), 400
 
     try:
-        conn = sqlite3.connect('feedback.db')
+        conn = sqlite3.connect(os.path.join(BASE_DIR, 'feedback.db'))
         cursor = conn.cursor()
         cursor.execute(
             'INSERT INTO feedbacks (patientUsername, feedback, date) VALUES (?, ?, ?)',
@@ -252,7 +253,7 @@ def create_new_feedback():
 @app.route('/api/feedbacks', methods=['GET'])
 def get_all_feedbacks():
     try:
-        conn = sqlite3.connect('feedback.db')
+        conn = sqlite3.connect(os.path.join(BASE_DIR, 'feedback.db'))
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM feedbacks ORDER BY date DESC')
         rows = cursor.fetchall()
@@ -276,7 +277,7 @@ def get_all_feedbacks():
 @app.route('/api/feedback/<int:id>', methods=['DELETE'])
 def delete_specific_feedback(id):
     try:
-        conn = sqlite3.connect('feedback.db')
+        conn = sqlite3.connect(os.path.join(BASE_DIR, 'feedback.db'))
         cursor = conn.cursor()
         cursor.execute('DELETE FROM feedbacks WHERE id = ?', (id,))
         conn.commit()
@@ -300,8 +301,7 @@ def get_assessment_questions():
         return jsonify({"error": "Disorder type is required"}), 400
         
     try:
-        # Use the exact path provided
-        db_path = r"C:\Users\Mokshith P\Desktop\VOICE\speech-therapy-app\backend\db\speech_disorders_assessment.db"
+        db_path = os.path.join(BASE_DIR, "db", "speech_disorders_assessment.db")
         print(f"Attempting to connect to database at: {db_path}")  # Debug log
         
         conn = sqlite3.connect(db_path)
@@ -406,4 +406,5 @@ def serve_recording(filename):
 # Entry Point
 # ─────────────────────────────────────────
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(debug=True, port=port)
