@@ -1,14 +1,24 @@
 # File: agents/exercise_generator.py
 import os
+import json
 from dotenv import load_dotenv
-from openai import OpenAI  # Changed from Groq to OpenAI
-from llama_index.core import VectorStoreIndex
-from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-import chromadb
-from sentence_transformers import SentenceTransformer
+from openai import OpenAI
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"))
+
+# Load pre-extracted therapy context from JSON (replaces ChromaDB + sentence-transformers)
+CONTEXT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "therapy_context.json")
+with open(CONTEXT_PATH, "r") as f:
+    THERAPY_CONTEXT = json.load(f)
+
+# Map disorder types to collection names
+DISORDER_COLLECTION_MAP = {
+    "articulation": "Articulation",
+    "fluency": "Fluency_disorders",
+    "voice": "Voice_disorders",
+    "language": "Language_disorders",
+    "motor_speech": "Motor_speech_disorder",
+}
 
 class DisorderAgent:
     def __init__(self, collection_name):
@@ -17,26 +27,9 @@ class DisorderAgent:
             api_key=os.environ.get("GEMINI_API_KEY", ""),
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
         )
-        
         self.collection_name = collection_name
-        
-        # Initialize ChromaDB vector store
-        chroma_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "chroma_db")
-        self.vector_store = ChromaVectorStore(
-            chroma_collection=chromadb.PersistentClient(path=chroma_path).get_collection(collection_name)
-        )
-        
-        # Embedding model configuration
-        self.embed_model = HuggingFaceEmbedding(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
-            embed_batch_size=32
-        )
-        
-        # Create vector store index
-        self.index = VectorStoreIndex.from_vector_store(
-            vector_store=self.vector_store,
-            embed_model=self.embed_model
-        )
+        # Get pre-extracted context for this disorder
+        self.context_docs = THERAPY_CONTEXT.get(collection_name, [])
 
     def _build_articulation_prompt(self, context, patient_profile):
         return f"""
@@ -56,7 +49,7 @@ class DisorderAgent:
         - **Week 1:**
           - Target sounds: /r/ in isolation
           - Therapy focus: Improve tongue placement for /r/ using tactile cues
-          - Home practice: 
+          - Home practice:
             - Use engaging articulation apps to practice /r/ sounds.
             - Interactive storytelling sessions focusing on /r/ sound.
             - Daily mirror drills to visualize tongue placement.
@@ -103,7 +96,7 @@ class DisorderAgent:
         1. **Weekly Goals & Focus Areas**
         - **Week 1:**
           - Focus on breath control and smooth speech initiation
-          - Home practice: 
+          - Home practice:
             - Breathing exercises to support fluency.
             - Use of metronome for rhythmic speech practice.
             - Daily reading aloud with focus on smooth transitions.
@@ -150,7 +143,7 @@ class DisorderAgent:
         1. **Weekly Goals & Focus Areas**
         - **Week 1:**
           - Focus on vocal hygiene and healthy voice use
-          - Home practice: 
+          - Home practice:
             - Hydration and vocal rest strategies.
             - Gentle humming exercises to warm up the voice.
             - Daily vocal hygiene checklist.
@@ -197,7 +190,7 @@ class DisorderAgent:
         1. **Weekly Goals & Focus Areas**
         - **Week 1:**
           - Focus on vocabulary expansion and comprehension
-          - Home practice: 
+          - Home practice:
             - Interactive storytelling to introduce new words.
             - Vocabulary games using flashcards.
             - Daily reading sessions with comprehension questions.
@@ -244,7 +237,7 @@ class DisorderAgent:
         1. **Weekly Goals & Focus Areas**
         - **Week 1:**
           - Focus on breath control and phonation
-          - Home practice: 
+          - Home practice:
             - Breathing exercises to support speech.
             - Phonation drills with tactile feedback.
             - Use of apps for real-time phonation feedback.
@@ -275,16 +268,9 @@ class DisorderAgent:
         """
 
     def generate_exercises(self, patient_profile):
-        # Process goals input
-        goals = patient_profile["goals"]
-        if isinstance(goals, list):
-            goals = " ".join(goals)
-        
-        # Retrieve relevant context
-        retriever = self.index.as_retriever(similarity_top_k=1)
-        context_nodes = retriever.retrieve(goals)
-        context_text = "\n\n".join([n.text for n in context_nodes])
-        
+        # Use pre-extracted context (all docs from this collection)
+        context_text = "\n\n".join(self.context_docs[:3]) if self.context_docs else "No additional context available."
+
         # Determine which prompt to use based on disorder type
         disorder_type = patient_profile.get('disorder_type', 'articulation').lower()
         if disorder_type == 'articulation':
@@ -299,8 +285,7 @@ class DisorderAgent:
             prompt = self._build_motor_speech_prompt(context_text, patient_profile)
         else:
             raise ValueError(f"Unknown disorder type: {disorder_type}")
-        
-        # Generate response using OpenAI GPT-3.5 Turbo
+
         response = self.client.chat.completions.create(
             model="gemini-2.0-flash",
             messages=[
@@ -311,5 +296,5 @@ class DisorderAgent:
             max_tokens=2048,
             top_p=0.95
         )
-        
+
         return response.choices[0].message.content
