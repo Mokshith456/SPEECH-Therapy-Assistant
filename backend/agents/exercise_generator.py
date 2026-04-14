@@ -266,8 +266,14 @@ class DisorderAgent:
         """
 
     def generate_exercises(self, patient_profile):
-        # Use pre-extracted context (all docs from this collection)
-        context_text = "\n\n".join(self.context_docs[:3]) if self.context_docs else "No additional context available."
+        # Use pre-extracted context (truncated to fit token limits)
+        context_text = ""
+        for doc in self.context_docs:
+            if len(context_text) + len(doc) > 3000:
+                break
+            context_text += doc + "\n\n"
+        if not context_text:
+            context_text = "No additional context available."
 
         # Determine which prompt to use based on disorder type
         disorder_type = patient_profile.get('disorder_type', 'articulation').lower()
@@ -285,7 +291,7 @@ class DisorderAgent:
             raise ValueError(f"Unknown disorder type: {disorder_type}")
 
         response = self.client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": "You are a speech therapy expert assistant."},
                 {"role": "user", "content": prompt}
