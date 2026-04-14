@@ -10,7 +10,6 @@ import shutil
 
 # Add root directory to sys.path so 'agents' can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from agents.coordinator import MultiDisorderCoordinator
 
 # ─────────────────────────────────────────
 app = Flask(__name__)
@@ -63,6 +62,10 @@ def add_cors_headers(response):
 # ─────────────────────────────────────────
 # Routes
 # ─────────────────────────────────────────
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"})
 
 @app.route("/upload-report", methods=["POST"])
 def upload_report():
@@ -191,7 +194,9 @@ def generate_plan():
     try:
         # Clear recordings folder before generating new plan
         clear_recordings_folder()
-        
+
+        # Lazy import to avoid loading heavy ML deps at startup
+        from agents.coordinator import MultiDisorderCoordinator
         coordinator = MultiDisorderCoordinator()
         plan = coordinator.get_weekly_plan(disorder_type, profile)
         return jsonify({"plan": plan})
