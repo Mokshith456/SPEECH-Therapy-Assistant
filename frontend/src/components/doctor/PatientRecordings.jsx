@@ -90,6 +90,12 @@ export default function PatientRecordings() {
                         fontWeight: "600",
                         fontSize: "16px"
                     }}>Patient Recordings</Link>
+                    <Link to="/doctor/patients" style={{
+                        color: "#64748b",
+                        textDecoration: "none",
+                        fontWeight: "500",
+                        fontSize: "16px"
+                    }}>Patients</Link>
                 </div>
                 <Link to="/" style={{
                     position: "absolute",

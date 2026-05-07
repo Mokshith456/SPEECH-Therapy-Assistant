@@ -121,6 +121,12 @@ export default function RegisterPatient() {
                         fontWeight: "500",
                         fontSize: "15px"
                     }}>Patient Recordings</Link>
+                    <Link to="/doctor/patients" style={{
+                        color: "#64748b",
+                        textDecoration: "none",
+                        fontWeight: "500",
+                        fontSize: "15px"
+                    }}>Patients</Link>
                 </div>
                 <Link to="/" style={{
                     position: "absolute",
