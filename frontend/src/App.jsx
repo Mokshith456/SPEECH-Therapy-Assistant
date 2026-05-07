@@ -12,6 +12,7 @@ import ScheduleMeeting from "./components/doctor/ScheduleMeeting";
 import RegisterPatient from "./components/doctor/RegisterPatient";
 import ViewFeedbacks from "./components/doctor/ViewFeedbacks";
 import PatientRecordings from "./components/doctor/PatientRecordings";
+import PatientList from "./components/doctor/PatientList";
 
 // Patient pages
 import PatientDashboard from "./components/patient/PatientDashboard";
@@ -96,6 +97,20 @@ function DoctorDashboard() {
               Schedule Meeting
             </Link>
             <Link
+              to="/doctor/patients"
+              style={{
+                color: "#4b5563",
+                textDecoration: "none",
+                fontSize: "14px",
+                fontWeight: "500",
+                padding: "0.4rem 0.75rem",
+                borderRadius: "6px",
+                transition: "all 0.2s ease"
+              }}
+            >
+              Patients
+            </Link>
+            <Link
               to="/doctor/register"
               style={{
                 color: "#4b5563",
@@ -173,6 +188,7 @@ function DoctorDashboard() {
           <Route path="upload" element={<UploadReport />} />
           <Route path="schedule" element={<ScheduleMeeting />} />
           <Route path="register" element={<RegisterPatient />} />
+          <Route path="patients" element={<PatientList />} />
           <Route path="feedbacks" element={<ViewFeedbacks />} />
           <Route path="recordings" element={<PatientRecordings />} />
         </Routes>

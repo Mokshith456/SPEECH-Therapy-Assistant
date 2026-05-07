@@ -104,6 +104,7 @@ def register_patient():
     severity = data.get("severity", "").strip()
     goals = ",".join(data.get("goals", []))
     history = data.get("history", "").strip()
+    disorder_type = data.get("disorder_type", "").strip()
 
     if Patient.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists"}), 400
@@ -117,11 +118,29 @@ def register_patient():
         age=age,
         severity=severity,
         goals=goals,
-        history=history
+        history=history,
+        disorder_type=disorder_type,
     )
     db.session.add(new_patient)
     db.session.commit()
     return jsonify({"message": "Patient created successfully"})
+
+@app.route("/patients", methods=["GET"])
+def list_patients():
+    patients = Patient.query.order_by(Patient.id.desc()).all()
+    return jsonify([
+        {
+            "id": p.id,
+            "username": p.username,
+            "email": p.email,
+            "age": p.age,
+            "severity": p.severity,
+            "goals": p.goals,
+            "history": p.history,
+            "disorder_type": p.disorder_type,
+        }
+        for p in patients
+    ])
 
 @app.route("/login-patient", methods=["POST"])
 def login_patient():
